@@ -4,215 +4,170 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scream 3 Bingo</title>
+  <meta name="description" content="Generador de cartones de bingo para Scream 3. Un cartón distinto cada vez, modo slasher activado." />
   <style>
     :root {
-      --bg: #ececf1;
-      --card: rgba(255,255,255,0.82);
-      --text: #141414;
-      --muted: #666;
-      --dark: #0c0c0f;
-      --line: rgba(0,0,0,0.08);
-      --shadow: 0 12px 35px rgba(0,0,0,0.12);
-      --radius: 24px;
+      --bg: #070709;
+      --card: rgba(18,18,22,0.94);
+      --text: #f6f6f7;
+      --muted: #a3a3ad;
+      --red: #d1001f;
+      --red2: #ff3355;
+      --line: rgba(255,255,255,0.08);
+      --shadow: 0 18px 45px rgba(0,0,0,0.55);
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(244,244,246,1) 42%, rgba(232,232,236,1));
-      min-height: 100vh;
+        radial-gradient(circle at top, rgba(46,0,8,0.8), transparent 35%),
+        radial-gradient(circle at bottom, rgba(24,0,6,0.7), transparent 30%),
+        linear-gradient(180deg, #111116 0%, #070709 55%, #030304 100%);
+      overflow-x: hidden;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image:
+        radial-gradient(circle at 20% 20%, white 0.6px, transparent 0.7px),
+        radial-gradient(circle at 70% 40%, white 0.5px, transparent 0.6px),
+        radial-gradient(circle at 40% 80%, white 0.7px, transparent 0.8px);
+      background-size: 120px 120px, 160px 160px, 140px 140px;
+      mix-blend-mode: screen;
     }
 
     .wrap {
-      max-width: 1280px;
+      max-width: 920px;
       margin: 0 auto;
       padding: 20px;
+      position: relative;
+      z-index: 1;
     }
 
     .hero {
-      background: linear-gradient(135deg, #0c0c0f, #17171c 58%, #23232a);
-      color: white;
-      border-radius: 32px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(8,8,11,0.98), rgba(24,0,7,0.95) 58%, rgba(50,0,10,0.93));
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 30px;
       padding: 28px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.28);
-      margin-bottom: 24px;
-      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
     }
 
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.4fr 1fr;
-      gap: 24px;
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,51,85,0.18), transparent 65%);
+      filter: blur(10px);
     }
 
     .badge {
       display: inline-block;
-      padding: 8px 12px;
+      background: rgba(209,0,31,0.16);
+      border: 1px solid rgba(255,80,110,0.35);
+      color: #ff6984;
+      padding: 7px 11px;
       border-radius: 999px;
-      font-size: 12px;
-      letter-spacing: 0.18em;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      margin-bottom: 12px;
       text-transform: uppercase;
-      font-weight: 700;
-      color: rgba(255,255,255,0.8);
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 16px;
     }
 
     h1 {
-      font-size: clamp(2.5rem, 6vw, 4.5rem);
-      line-height: 0.95;
       margin: 0;
-      font-weight: 900;
+      font-size: clamp(2.5rem, 7vw, 4.3rem);
+      line-height: 0.95;
+      font-weight: 950;
       letter-spacing: -0.04em;
+      text-wrap: balance;
     }
 
     .hero p {
-      color: rgba(255,255,255,0.78);
+      color: var(--muted);
+      max-width: 720px;
       line-height: 1.7;
-      max-width: 780px;
+      margin: 14px 0 0;
     }
 
-    .controls {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 24px;
-      padding: 18px;
-      backdrop-filter: blur(8px);
-    }
-
-    .controls h2 {
-      margin: 0 0 12px;
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.82);
-    }
-
-    .controls label {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 0.95rem;
-      color: rgba(255,255,255,0.72);
-    }
-
-    .button-row,
-    .count-row {
+    .toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
+      margin-top: 22px;
     }
 
     button {
-      border: 0;
+      border: none;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease, opacity .2s ease;
       font: inherit;
     }
 
     button:hover { transform: translateY(-1px); }
     button:active { transform: translateY(0); }
 
-    .count-btn,
-    .secondary-btn,
-    .primary-btn {
-      border-radius: 18px;
-      padding: 12px 16px;
-      font-weight: 800;
-    }
-
-    .count-btn {
-      background: rgba(255,255,255,0.1);
+    .primary {
+      background: linear-gradient(180deg, var(--red2), var(--red));
       color: white;
+      box-shadow: 0 12px 28px rgba(209,0,31,0.28);
     }
 
-    .count-btn.active {
-      background: white;
-      color: black;
-      box-shadow: 0 10px 24px rgba(255,255,255,0.12);
-    }
-
-    .primary-btn {
-      background: white;
-      color: black;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
-    }
-
-    .secondary-btn {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .info-card {
-      background: var(--card);
+    .secondary {
+      background: rgba(255,255,255,0.06);
+      color: #efeff2;
       border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 18px;
-      box-shadow: var(--shadow);
     }
 
-    .info-card.dark {
-      background: var(--dark);
-      color: white;
-    }
-
-    .info-card h3 {
-      margin: 0 0 8px;
-      font-size: 1rem;
-    }
-
-    .info-card p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.65;
-      font-size: 0.95rem;
-    }
-
-    .info-card.dark p { color: rgba(255,255,255,0.74); }
-
-    .boards {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-
-    .board-card {
+    .board {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 30px;
+      border-radius: 28px;
       padding: 18px;
+      border: 1px solid var(--line);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(6px);
+      position: relative;
+      overflow: hidden;
     }
 
     .board-head {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 16px;
+      align-items: start;
+      gap: 14px;
+      margin-bottom: 14px;
     }
 
     .board-head h2 {
       margin: 0;
-      font-size: 1.45rem;
+      font-size: 1.4rem;
       letter-spacing: -0.03em;
     }
 
     .board-head p {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 42ch;
     }
 
     .mini-actions {
@@ -222,202 +177,268 @@
     }
 
     .mini-btn {
-      background: white;
+      background: rgba(255,255,255,0.06);
       border: 1px solid var(--line);
-      color: #222;
+      color: #f1f1f4;
       border-radius: 16px;
       padding: 10px 12px;
-      font-size: 0.9rem;
-      font-weight: 700;
+      font-size: 0.92rem;
+      font-weight: 800;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .cell {
       aspect-ratio: 1 / 1;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,0.88);
-      color: #171717;
-      padding: 8px;
-      font-size: 0.86rem;
-      line-height: 1.2;
-      font-weight: 700;
+      font-size: 0.79rem;
+      line-height: 1.15;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      padding: 8px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #121218, #0d0d11);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #ececf1;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
       user-select: none;
+      position: relative;
+      transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
     }
 
+    .cell:hover { transform: scale(1.015); }
+
     .cell.marked {
-      background: black;
+      background: linear-gradient(180deg, #ff3557, #b4001a);
       color: white;
-      border-color: black;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 10px 24px rgba(209,0,31,0.24);
     }
 
     .cell.free {
-      outline: 2px solid rgba(0,0,0,0.15);
+      outline: 2px solid rgba(255,255,255,0.18);
+    }
+
+    .tip {
+      margin-top: 14px;
+      color: #8f8f98;
+      font-size: 0.92rem;
     }
 
     .footer-note {
       text-align: center;
-      color: #555;
+      color: #71717c;
       font-size: 0.92rem;
-      padding: 26px 10px 10px;
+      padding: 20px 8px 8px;
     }
 
-    @media (max-width: 980px) {
-      .hero-grid,
-      .info-grid,
-      .boards {
-        grid-template-columns: 1fr;
-      }
+    .ghostface-overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
     }
 
-    @media (max-width: 700px) {
+    .ghostface-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ghostface-card {
+      width: min(92vw, 420px);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(18,18,22,0.98), rgba(10,10,12,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.6);
+      padding: 20px;
+      text-align: center;
+      transform: scale(0.86) translateY(18px);
+      transition: transform .28s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ghostface-overlay.show .ghostface-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .ghostface-card::before {
+      content: "";
+      position: absolute;
+      inset: -30% 30% auto auto;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(255,51,85,0.26), transparent 60%);
+      filter: blur(12px);
+    }
+
+    .ghost-svg {
+      width: 120px;
+      height: 160px;
+      margin: 0 auto 12px;
+      display: block;
+      filter: drop-shadow(0 10px 25px rgba(0,0,0,0.45));
+      animation: floaty 1.8s ease-in-out infinite;
+    }
+
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .ghostface-card h3 {
+      margin: 0;
+      font-size: 1.9rem;
+      letter-spacing: -0.04em;
+    }
+
+    .ghostface-card p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin: 10px 0 16px;
+    }
+
+    .ghost-btn {
+      background: linear-gradient(180deg, var(--red2), var(--red));
+      color: white;
+      width: 100%;
+    }
+
+    @media (max-width: 720px) {
       .wrap { padding: 14px; }
       .hero { padding: 20px; border-radius: 24px; }
-      .board-card { padding: 14px; border-radius: 24px; }
-      .grid { gap: 8px; }
-      .cell { font-size: 0.74rem; border-radius: 14px; }
+      .board { padding: 14px; border-radius: 24px; }
       .board-head { flex-direction: column; }
+      .grid { gap: 7px; }
+      .cell { font-size: 0.72rem; border-radius: 12px; }
+      .toolbar { flex-direction: column; }
+      .toolbar button { width: 100%; }
     }
 
     @media print {
-      body { background: white; }
-      .controls, .footer-note, .mini-actions, .hero p:last-child { display: none !important; }
-      .hero, .board-card, .info-card { box-shadow: none; }
-      .hero { color: black; background: white; border: 1px solid #ddd; }
-      .badge { color: black; background: #f3f3f3; border: 1px solid #ddd; }
-      .hero p { color: #444; }
-      .boards { grid-template-columns: 1fr 1fr; }
-      .board-card { break-inside: avoid; }
+      body { background: white; color: black; }
+      .noise, .toolbar, .mini-actions, .footer-note, .tip, .ghostface-overlay { display: none !important; }
+      .hero, .board { box-shadow: none; background: white; border: 1px solid #ddd; }
+      .cell { color: black; background: white; border: 1px solid #ddd; }
+      .cell.marked { background: #ddd; color: black; }
     }
   </style>
 </head>
 <body>
+  <div class="noise"></div>
+
   <div class="wrap">
     <section class="hero">
-      <div class="hero-grid">
-        <div>
-          <div class="badge">Noche de peli caótica</div>
-          <h1>Scream 3 Bingo</h1>
-          <p>
-            Genera cartones aleatorios para ver la película con tu mejor amiga y convertir cada susto,
-            llamada inquietante y decisión regulera en un pequeño deporte doméstico.
-          </p>
-        </div>
-
-        <div class="controls">
-          <h2>🎬 Controles del caos</h2>
-          <label>Número de cartones</label>
-          <div class="count-row" id="countButtons"></div>
-          <div class="button-row" style="margin-top: 16px;">
-            <button class="primary-btn" id="regenBtn">🔄 Generar nuevos cartones</button>
-            <button class="secondary-btn" onclick="window.print()">🖨️ Imprimir o guardar PDF</button>
-          </div>
-        </div>
+      <div class="badge">Modo slasher activado</div>
+      <h1>Scream 3 Bingo 🔪</h1>
+      <p>
+        Comparte el enlace, abre la página y cada carga te escupe un cartón nuevo. Una sola carta por pantalla, como Dios, Ghostface y GitHub Pages mandan. Marca clichés, giros con peluquín y decisiones que harían llorar a cualquier guionista con pulso.
+      </p>
+      <div class="toolbar">
+        <button class="primary" id="regenBtn">🔄 Generar otro cartón</button>
+        <button class="secondary" id="copyLinkBtn">🔗 Copiar enlace</button>
+        <button class="secondary" onclick="window.print()">🖨️ Imprimir / PDF</button>
       </div>
     </section>
 
-    <section class="info-grid">
-      <article class="info-card dark">
-        <h3>🔪 Cómo jugar</h3>
-        <p>
-          Cada persona coge un cartón distinto. Marcad casillas cuando ocurra algo en pantalla.
-          Cinco en línea y gloria slasher.
-        </p>
-      </article>
-
-      <article class="info-card">
-        <h3>📞 Regla casera</h3>
-        <p>
-          Cuando alguien cante bingo, tiene que imitar una llamada inquietante antes de seguir viendo la peli.
-        </p>
-      </article>
-
-      <article class="info-card">
-        <h3>🍿 Modo extra</h3>
-        <p>
-          Repartid varios cartones distintos. Así cada una vive una paranoia diferente. Multiverso de cuchillitos de papel.
-        </p>
-      </article>
-    </section>
-
-    <section class="boards" id="boards"></section>
+    <section class="board" id="board"></section>
 
     <div class="footer-note">
-      Hecho para GitHub Pages. Sube este archivo como <strong>index.html</strong> y la criatura echará a andar.
+      Súbelo como <strong>index.html</strong> a GitHub Pages y tendrás un enlace compartible que genera un cartón distinto en cada apertura.
+    </div>
+  </div>
+
+  <div class="ghostface-overlay" id="bingoOverlay" aria-hidden="true">
+    <div class="ghostface-card">
+      <svg class="ghost-svg" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M60 8C78 8 92 24 92 44V88C92 101 100 111 104 122C108 132 107 146 96 146C84 146 82 132 72 132C63 132 64 152 52 152C40 152 42 132 32 132C22 132 20 146 8 146C-3 146 -4 132 0 122C4 111 12 101 12 88V44C12 24 26 8 44 8H60Z" fill="#F6F3EA"/>
+        <path d="M44 46C44 35 38 28 31 28C24 28 18 35 18 46C18 58 24 68 31 68C38 68 44 58 44 46Z" fill="#0C0C10"/>
+        <path d="M102 46C102 35 96 28 89 28C82 28 76 35 76 46C76 58 82 68 89 68C96 68 102 58 102 46Z" fill="#0C0C10"/>
+        <path d="M60 62C46 62 36 75 36 90C36 110 48 128 60 128C72 128 84 110 84 90C84 75 74 62 60 62Z" fill="#0C0C10"/>
+        <path d="M50 83C52 80 56 78 60 78C64 78 68 80 70 83" stroke="#F6F3EA" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <h3>¡Bingo, reina del slasher!</h3>
+      <p>
+        Ghostface ha salido de la sombra para felicitarte por completar línea. El guion sigue delirando, pero tú ya has ganado.
+      </p>
+      <button class="ghost-btn" id="closeOverlayBtn">Seguir viendo el desastre</button>
     </div>
   </div>
 
   <script>
     const PROMPTS = [
-      'Ghostface aparece o es mencionado',
-      'Grito dramático nivel ópera',
-      'Puerta que se abre con tensión absurda',
-      'Llamada telefónica con vibra de desastre',
-      'Personaje toma una decisión cuestionable',
-      'Carrera torpe por un pasillo',
-      'Alguien mira detrás sin mirar bien',
-      'Suspense por un ruido que luego era otra cosa',
-      'Entrada sorpresa con susto barato',
-      'Comentario meta sobre películas o secuelas',
-      'Alguien dice algo intensísimo sin venir a cuento',
-      'Plano sospechoso de una casa enorme',
-      'Personaje se queda solo cuando no debería',
-      'Mirada de “esto va fatal”',
-      'Puñalada o ataque fuera de plano',
-      'Objeto cotidiano usado como arma improvisada',
-      'Alguien corre hacia el peligro',
-      'Momento “¿por qué no llamas a la policía?”',
-      'Revelación que entra haciendo teatro',
-      'Golpe de música para asustar',
-      'Caída, tropiezo o choque inoportuno',
-      'Personaje toca una puerta con cero prudencia',
-      'Frase que suena profunda pero es puro melodrama',
-      'Alguien sospecha de la persona equivocada',
-      'Se repite una regla no escrita del slasher',
-      'Escena que se nota que quiere ser icónica',
-      'Personaje aparece justo a tiempo',
-      'Silencio sospechoso antes del caos',
-      'Cara de pánico congelada dos segundos de más',
-      'Persecución con energía de telenovela homicida',
-      'Puerta o ventana no funciona cuando más hace falta',
-      'Alguien se separa del grupo fatalmente',
-      'Diálogo que solo existe para subir la tensión',
-      'Gesto de “he cometido un error tremendo”',
-      'Objeto importante aparece de la nada',
-      'Momento de falsa seguridad',
-      'Personaje entra en una habitación oscurísima',
-      'Confusión total sobre quién es culpable',
-      'Frase sarcástica en medio del peligro',
-      'Alguien escucha un ruido y decide investigar',
-      'Entrada o salida por una ventana',
-      'Escena con vibra de estudio de Hollywood',
-      'Mirada sospechosa que huele a red herring',
-      'Alguien sobreexplica algo en pleno caos',
-      'Ataque que llega cuando parecía todo calmado',
-      'Una revelación empeora muchísimo las cosas',
-      'Referencia al pasado o a películas anteriores',
-      'Personaje usa el teléfono como si fuera un salvavidas',
-      'Momento tan extra que da risa',
-      'Señal clarísima de que esto acabará mal',
-      'Alguien grita un nombre varias veces',
-      'Escena con energía de “nadie aprende nada”',
-      'Zoom mental del espectador: “no entres ahí”',
-      'Personaje reaparece cuando lo dabas por perdido',
-      'Pausa dramática más larga de lo normal'
+      'Ghostface aparece o se menciona como si cotizara por horas',
+      'Decisión tan mala que da ganas de cobrar entrada por verla',
+      'Personaje corre en línea recta con energía de NPC averiado',
+      'Puerta que falla justo ahora, porque el guion es un bromista',
+      'Alguien se separa del grupo con entusiasmo suicida',
+      'Comentario meta tipo “esto parece una secuela”',
+      'Plot twist con laca de telenovela criminal',
+      'Sospechoso tan obvio que casi parece inocente otra vez',
+      'Silencio incómodo antes del susto de rigor',
+      'Susto barato pero te lo comes igual',
+      'Llamada telefónica creepy con alma de operadora del infierno',
+      'Se ignora una señal de peligro visible desde Cuenca',
+      'Frase intensa que suena profunda y no significa un colín',
+      'Personaje mira detrás en el segundo menos conveniente',
+      'Grito con ambición de premio y pulmón de diva',
+      'Momento “esto no tiene sentido pero sigo dentro”',
+      'Cámara o puesta en escena diciendo “mírame, mamá, soy cine”',
+      'Referencia a reglas del terror para gente que ha visto demasiado Letterboxd',
+      'Se confía en la persona equivocada, edición coleccionista',
+      'Alguien reaparece porque la película se acordó de su existencia',
+      'Ataque o puñalada con coreografía de parque temático',
+      'Escena que quiere ser icónica con todas sus fuerzas',
+      'Red herring con neón, bocina y fuegos artificiales',
+      'Personaje entra en un sitio oscuro voluntariamente, increíble gestión del riesgo',
+      'Objeto útil aparece por generación espontánea',
+      'Diálogo puesto ahí para explicar el caos a martillazos',
+      'Música inflando la tensión como un globo criminal',
+      'Persecución con pasos torpes y dignidad decreciente',
+      'Falsa sensación de seguridad, receta clásica',
+      'Personaje actuando como si no existieran Scream 1 y 2',
+      'Momento ridículo que te saca una carcajada traicionera',
+      'Plano de pasillo eterno con vocación de mausoleo',
+      'Alguien investiga un ruido. Mala idea, peor timing',
+      'El final intenta sorprenderte con energía de fuegos de fin de curso',
+      'Actuación dramática al 200%, cero miedo al exceso',
+      'Escena que huele a relleno pero se peina de prestigio',
+      'Personaje sobreexplica en mitad del caos como si esto fuera un TED Talk',
+      'Momento “nadie aprende absolutamente nada”',
+      'Tu cerebro grita: NO ENTRES AHÍ, criatura',
+      'Timing sospechosamente perfecto, cortesía del destino y un editor con prisa',
+      'Suspense estirado como chicle de gasolinera',
+      'El teléfono se usa como apoyo emocional y arma narrativa',
+      'Entrada teatral del villano con hambre de aplauso',
+      'Cara de pánico congelada medio segundo más de lo humano',
+      'Conveniencia absurda del destino, edición platino',
+      'Escena cuyo final ves venir desde Saturno',
+      'Frase sarcástica en pleno peligro porque el meta nunca duerme',
+      'Aparece alguien justo a tiempo. Qué bonita la casualidad',
+      'Plano tan artificial que casi puedes oler el plató',
+      'El guion hace un triple mortal sin red',
+      'Momento “esto es camp y lo sabes”',
+      'La película se pone intensita con una revelación peinada con dramatismo',
+      'Mirada sospechosa enviada por mensajería urgente',
+      'Escena con energía de “Wes, te estamos viendo”',
+      'Cliché slasher servido con cubertería de lujo'
     ];
 
-    let boardCount = 2;
+    let currentBoard = [];
+    let cells = [];
+    let overlayShownForCurrentWin = false;
 
     function shuffle(array) {
       const arr = [...array];
@@ -429,111 +450,187 @@
     }
 
     function makeBoard() {
-      const picks = shuffle(PROMPTS).slice(0, 24);
-      return [...picks.slice(0, 12), 'FREE SPACE 🔪', ...picks.slice(12)];
+      const items = shuffle(PROMPTS).slice(0, 24);
+      return [...items.slice(0, 12), 'FREE 🔪', ...items.slice(12)];
     }
 
-    function copyBoard(board, index) {
+    function copyBoard(board) {
       const rows = [];
-      for (let i = 0; i < 25; i += 5) {
-        rows.push(board.slice(i, i + 5).join(' | '));
-      }
-      const text = `Cartón ${index + 1}\n\n${rows.join('\n')}`;
+      for (let i = 0; i < 25; i += 5) rows.push(board.slice(i, i + 5).join(' | '));
+      const text = `Scream 3 Bingo\n\n${rows.join('\n')}`;
       navigator.clipboard.writeText(text)
         .then(() => alert('Cartón copiado al portapapeles.'))
-        .catch(() => alert('No se pudo copiar, pero el cartón sigue aquí mirando fijamente.'));
+        .catch(() => alert('No se pudo copiar, pero el cartón sigue aquí, acechando.'));
     }
 
-    function createCell(text, isFree) {
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Enlace copiado. Ya puedes repartir caos cinematográfico.'))
+        .catch(() => alert('No pude copiar el enlace, pero puedes copiar la URL manualmente.'));
+    }
+
+    function createCell(text, isFree, index) {
       const cell = document.createElement('button');
       cell.className = 'cell' + (isFree ? ' marked free' : '');
       cell.textContent = text;
-      if (!isFree) {
-        cell.addEventListener('click', () => {
-          cell.classList.toggle('marked');
-        });
-      }
+      cell.setAttribute('aria-pressed', isFree ? 'true' : 'false');
+      cell.addEventListener('click', () => {
+        if (isFree) return;
+        cell.classList.toggle('marked');
+        cell.setAttribute('aria-pressed', cell.classList.contains('marked') ? 'true' : 'false');
+        overlayShownForCurrentWin = false;
+        checkBingo();
+      });
       return cell;
     }
 
-    function renderCountButtons() {
-      const wrap = document.getElementById('countButtons');
-      wrap.innerHTML = '';
-      [1, 2, 3, 4].forEach(n => {
-        const btn = document.createElement('button');
-        btn.className = 'count-btn' + (boardCount === n ? ' active' : '');
-        btn.textContent = n;
-        btn.addEventListener('click', () => {
-          boardCount = n;
-          renderCountButtons();
-          renderBoards();
-        });
-        wrap.appendChild(btn);
+    function renderBoard() {
+      currentBoard = makeBoard();
+      cells = [];
+      overlayShownForCurrentWin = false;
+
+      const boardWrap = document.getElementById('board');
+      boardWrap.innerHTML = '';
+
+      const head = document.createElement('div');
+      head.className = 'board-head';
+      head.innerHTML = `
+        <div>
+          <h2>Tu cartón maldito</h2>
+          <p>Una sola carta por dispositivo o por recarga. Abres el enlace, recibes un destino nuevo. Marca casillas, canta bingo y deja que el teléfono te juzgue.</p>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn" id="copyBoardBtn">📋 Copiar cartón</button>
+          <button class="mini-btn" id="resetBtn">♻️ Reset</button>
+        </div>
+      `;
+
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+
+      currentBoard.forEach((item, i) => {
+        const cell = createCell(item, i === 12, i);
+        cells.push(cell);
+        grid.appendChild(cell);
       });
+
+      const tip = document.createElement('div');
+      tip.className = 'tip';
+      tip.textContent = 'Pro tip: cada vez que compartas el enlace y se abra, saldrá una carta recién salida del matadero cinéfilo.';
+
+      boardWrap.appendChild(head);
+      boardWrap.appendChild(grid);
+      boardWrap.appendChild(tip);
+
+      document.getElementById('copyBoardBtn').addEventListener('click', () => copyBoard(currentBoard));
+      document.getElementById('resetBtn').addEventListener('click', resetBoardMarks);
     }
 
-    function renderBoards() {
-      const boardsWrap = document.getElementById('boards');
-      boardsWrap.innerHTML = '';
+    function resetBoardMarks() {
+      cells.forEach((cell, index) => {
+        if (index === 12) {
+          cell.className = 'cell marked free';
+          cell.setAttribute('aria-pressed', 'true');
+        } else {
+          cell.className = 'cell';
+          cell.setAttribute('aria-pressed', 'false');
+        }
+      });
+      overlayShownForCurrentWin = false;
+    }
 
-      for (let b = 0; b < boardCount; b++) {
-        const board = makeBoard();
-        const card = document.createElement('article');
-        card.className = 'board-card';
+    function getMarkedState() {
+      return cells.map(cell => cell.classList.contains('marked'));
+    }
 
-        const head = document.createElement('div');
-        head.className = 'board-head';
+    function hasWinningLine(marked) {
+      const wins = [
+        [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+        [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+        [0,6,12,18,24], [4,8,12,16,20]
+      ];
+      return wins.some(line => line.every(index => marked[index]));
+    }
 
-        const titleBlock = document.createElement('div');
-        titleBlock.innerHTML = `
-          <h2>Cartón ${b + 1}</h2>
-          <p>Marca casillas durante la peli. Cinco en línea y confeti imaginario.</p>
-        `;
-
-        const actions = document.createElement('div');
-        actions.className = 'mini-actions';
-
-        const copyBtn = document.createElement('button');
-        copyBtn.className = 'mini-btn';
-        copyBtn.textContent = '📋 Copiar';
-        copyBtn.addEventListener('click', () => copyBoard(board, b));
-
-        const resetBtn = document.createElement('button');
-        resetBtn.className = 'mini-btn';
-        resetBtn.textContent = '♻️ Reset';
-
-        actions.appendChild(copyBtn);
-        actions.appendChild(resetBtn);
-
-        head.appendChild(titleBlock);
-        head.appendChild(actions);
-
-        const grid = document.createElement('div');
-        grid.className = 'grid';
-
-        const cells = board.map((item, i) => createCell(item, i === 12));
-        cells.forEach(cell => grid.appendChild(cell));
-
-        resetBtn.addEventListener('click', () => {
-          cells.forEach((cell, index) => {
-            if (index === 12) {
-              cell.className = 'cell marked free';
-            } else {
-              cell.className = 'cell';
-            }
-          });
-        });
-
-        card.appendChild(head);
-        card.appendChild(grid);
-        boardsWrap.appendChild(card);
+    function checkBingo() {
+      const marked = getMarkedState();
+      if (hasWinningLine(marked) && !overlayShownForCurrentWin) {
+        overlayShownForCurrentWin = true;
+        playCreepyPhone();
+        showOverlay();
       }
     }
 
-    document.getElementById('regenBtn').addEventListener('click', renderBoards);
+    function showOverlay() {
+      const overlay = document.getElementById('bingoOverlay');
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
 
-    renderCountButtons();
-    renderBoards();
+    function closeOverlay() {
+      const overlay = document.getElementById('bingoOverlay');
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function playCreepyPhone() {
+      const AudioContextRef = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextRef) return;
+      const ctx = new AudioContextRef();
+      const now = ctx.currentTime;
+
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.15, now + 0.03);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+      master.connect(ctx.destination);
+
+      const scheduleRing = (start, duration = 0.22) => {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(870, start);
+        osc2.frequency.setValueAtTime(1310, start);
+
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(master);
+
+        osc1.start(start);
+        osc2.start(start);
+        osc1.stop(start + duration + 0.02);
+        osc2.stop(start + duration + 0.02);
+      };
+
+      scheduleRing(now + 0.05, 0.20);
+      scheduleRing(now + 0.45, 0.20);
+      scheduleRing(now + 1.05, 0.24);
+      scheduleRing(now + 1.55, 0.24);
+      scheduleRing(now + 2.05, 0.18);
+
+      setTimeout(() => {
+        if (ctx.state !== 'closed') ctx.close().catch(() => {});
+      }, 3200);
+    }
+
+    document.getElementById('regenBtn').addEventListener('click', renderBoard);
+    document.getElementById('copyLinkBtn').addEventListener('click', copyLink);
+    document.getElementById('closeOverlayBtn').addEventListener('click', closeOverlay);
+    document.getElementById('bingoOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'bingoOverlay') closeOverlay();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeOverlay();
+    });
+
+    renderBoard();
   </script>
 </body>
 </html>
