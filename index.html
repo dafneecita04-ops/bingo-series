@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bingo de series y pelis</title>
+  <meta name="description" content="Bingo compartible con cartones aleatorios para series y pelis." />
+  <style>
+    :root {
+      --bg1: #111116;
+      --bg2: #070709;
+      --card: rgba(18,18,22,0.94);
+      --text: #f6f6f7;
+      --muted: #a3a3ad;
+      --accent: #d1001f;
+      --accent2: #ff3355;
+      --line: rgba(255,255,255,0.08);
+      --shadow: 0 18px 45px rgba(0,0,0,0.55);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--accent) 22%, transparent), transparent 35%), linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 60%, #030304 100%);
+      overflow-x: hidden;
+    }
+
+    body[data-mode="scream"] { --bg1:#190006; --bg2:#070709; --accent:#d1001f; --accent2:#ff3355; }
+    body[data-mode="gilmore"] { --bg1:#3a2416; --bg2:#1f1712; --accent:#8b5cf6; --accent2:#c084fc; }
+    body[data-mode="supernatural"] { --bg1:#102033; --bg2:#0b0f14; --accent:#4b6cb7; --accent2:#6fa8ff; }
+    body[data-mode="saw"] { --bg1:#1a1a1a; --bg2:#090909; --accent:#2f855a; --accent2:#68d391; }
+    body[data-mode="glee"] { --bg1:#31124f; --bg2:#1a0f2b; --accent:#ec4899; --accent2:#f9a8d4; }
+    body[data-mode="greys"] { --bg1:#16304c; --bg2:#0f172a; --accent:#38bdf8; --accent2:#7dd3fc; }
+    body[data-mode="from"] { --bg1:#16311a; --bg2:#0a140a; --accent:#22c55e; --accent2:#86efac; }
+    body[data-mode="simpsons"] { --bg1:#4b3d00; --bg2:#221d00; --accent:#facc15; --accent2:#fde68a; }
+    body[data-mode="tentaciones"] { --bg1:#43000f; --bg2:#240008; --accent:#ef4444; --accent2:#fca5a5; }
+    body[data-mode="conquistador"] { --bg1:#3a2b08; --bg2:#1d1605; --accent:#f59e0b; --accent2:#fcd34d; }
+    body[data-mode="toohot"] { --bg1:#4a1032; --bg2:#250818; --accent:#fb7185; --accent2:#f9a8d4; }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image:
+        radial-gradient(circle at 20% 20%, white 0.6px, transparent 0.7px),
+        radial-gradient(circle at 70% 40%, white 0.5px, transparent 0.6px),
+        radial-gradient(circle at 40% 80%, white 0.7px, transparent 0.8px);
+      background-size: 120px 120px, 160px 160px, 140px 140px;
+      mix-blend-mode: screen;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero, .board {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      top: -40px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--accent2) 28%, transparent), transparent 65%);
+      filter: blur(10px);
+    }
+
+    .badge {
+      display: inline-block;
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent2) 35%, transparent);
+      color: color-mix(in srgb, white 78%, var(--accent2));
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.1rem);
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 740px;
+      line-height: 1.7;
+      margin: 14px 0 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button, select {
+      border: none;
+      cursor: pointer;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font-weight: 900;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+      font: inherit;
+    }
+
+    button:hover, select:hover { transform: translateY(-1px); }
+    .primary {
+      background: linear-gradient(180deg, var(--accent2), var(--accent));
+      color: white;
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+    .secondary {
+      background: rgba(255,255,255,0.06);
+      color: #efeff2;
+      border: 1px solid var(--line);
+    }
+    select.secondary { min-width: 260px; }
+
+    .board {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .board-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .board-head h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+    }
+
+    .board-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 42ch;
+    }
+
+    .mini-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mini-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--line);
+      color: #f1f1f4;
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      font-size: 0.78rem;
+      line-height: 1.15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #121218, #0d0d11);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #ececf1;
+      font-weight: 800;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      user-select: none;
+      transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .cell:hover { transform: scale(1.015); }
+    .cell.marked {
+      background: linear-gradient(180deg, var(--accent2), var(--accent));
+      color: white;
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 26%, transparent);
+    }
+    .cell.free { outline: 2px solid rgba(255,255,255,0.18); }
+
+    .tip, .footer-note {
+      color: #8f8f98;
+      font-size: 0.92rem;
+    }
+    .tip { margin-top: 14px; }
+    .footer-note { text-align: center; padding: 20px 8px 8px; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .overlay-card {
+      width: min(92vw, 420px);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(18,18,22,0.98), rgba(10,10,12,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 26px 70px rgba(0,0,0,0.6);
+      padding: 20px;
+      text-align: center;
+      transform: scale(0.9) translateY(18px);
+      transition: transform .28s ease;
+    }
+    .overlay.show .overlay-card { transform: scale(1) translateY(0); }
+    .overlay-emoji { font-size: 4rem; line-height: 1; }
+    .overlay-card h3 { margin: 10px 0 0; font-size: 1.8rem; }
+    .overlay-card p { color: var(--muted); line-height: 1.6; }
+    .overlay-btn { width: 100%; }
+
+    @media (max-width: 720px) {
+      .wrap { padding: 14px; }
+      .hero, .board { border-radius: 24px; }
+      .hero { padding: 20px; }
+      .board { padding: 14px; }
+      .board-head { flex-direction: column; }
+      .grid { gap: 7px; }
+      .cell { font-size: 0.7rem; border-radius: 12px; }
+      .toolbar { flex-direction: column; }
+      .toolbar button, .toolbar select { width: 100%; }
+    }
+
+    @media print {
+      body { background: white; color: black; }
+      .noise, .toolbar, .mini-actions, .footer-note, .tip, .overlay { display: none !important; }
+      .hero, .board { box-shadow: none; background: white; border: 1px solid #ddd; }
+      .cell { color: black; background: white; border: 1px solid #ddd; }
+      .cell.marked { background: #ddd; color: black; }
+    }
+  </style>
+</head>
+<body data-mode="gilmore">
+  <div class="noise"></div>
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="badge" id="modeBadge">Modo Gilmore activado</div>
+      <h1 id="mainTitle">Gilmore Girls Bingo ☕</h1>
+      <p id="mainDescription">Abre la página y te genera un cartón nuevo. Cambia de universo cuando quieras: café, cuchillos, hospitales, realities o caos sobrenatural.</p>
+      <div class="toolbar">
+        <button class="primary" id="regenBtn">🔄 Generar otro cartón</button>
+        <button class="secondary" id="copyLinkBtn">🔗 Copiar enlace</button>
+        <button class="secondary" id="printBtn">🖨️ Imprimir / PDF</button>
+      </div>
+      <div class="toolbar">
+        <select id="modeSelect" class="secondary" aria-label="Elegir serie o peli">
+          <option value="gilmore">☕ Gilmore Girls</option>
+          <option value="scream">🔪 Scream 3</option>
+          <option value="supernatural">👻 Supernatural</option>
+          <option value="saw">🩸 Saw</option>
+          <option value="glee">🎤 Glee</option>
+          <option value="greys">🏥 Anatomía de Grey</option>
+          <option value="from">🌲 From</option>
+          <option value="simpsons">🍩 Los Simpson</option>
+          <option value="tentaciones">🔥 La Isla de las Tentaciones</option>
+          <option value="conquistador">🪓 El Conquistador</option>
+          <option value="toohot">💋 Too Hot To Handle</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="board" id="board"></section>
+
+    <div class="footer-note">Súbelo como <strong>index.html</strong> a GitHub Pages y cada apertura generará un cartón distinto.</div>
+  </div>
+
+  <div class="overlay" id="bingoOverlay" aria-hidden="true">
+    <div class="overlay-card">
+      <div class="overlay-emoji" id="overlayEmoji">🔪</div>
+      <h3 id="overlayTitle">¡Bingo!</h3>
+      <p id="overlayText">Has completado una línea.</p>
+      <button class="primary overlay-btn" id="closeOverlayBtn">Seguir</button>
+    </div>
+  </div>
+
+  <script>
+    const PROMPTS_BY_MODE = {
+
+  scream: [
+    'Ghostface llama','Ghostface aparece','Ghostface detrás','Sidney aparece','Gale aparece','Dewey aparece','Jennifer Jolie imita a Gale','Roman sospechoso','Roman revelación','Rodaje de Stab 3',
+    'Set de Woodsboro','Casa final','Puerta no abre','Ventana bloqueada','Persecución pasillo','Persecución casa','Susto con música','Plano oscuro','Investigan ruido','Alguien se queda solo',
+    'Cara de pánico','Grito fuerte','Puñalada','Referencia Billy','Hablan del pasado','Todos sospechan','Giro final','Explicación larga','Luz falla','Teléfono suena',
+    'Entrada sorpresa','Momento meta','Escena Hollywood','Falsa calma','Asesino habla','Reaparición','Final explicado','Alguien cae','Silencio incómodo','Plano largo',
+    'Cámara lenta','Grito fuera de cámara','Puerta cerrándose','Alguien huye','Objeto improvisado','Alguien duda','Tensión creciente','Plano raro','Alguien observa','Escena final'
+  ],
+
+  gilmore: [
+    'Lorelai pide café','Rory lee','Luke gruñón','Emily critica','Richard serio','Cena viernes','Discusión madre','Chiste rápido','Referencia pop','Rory estudia',
+    'Harvard mencionado','Yale mencionado','Stars Hollow','Kirk raro','Taylor pesado','Miss Patty cotillea','Evento pueblo','Festival raro','Lorelai come basura','Conversación rápida',
+    'Comentario irónico','Luke sirve café','Emily indirecta','Abrazo','Drama familiar','Rory novio','Lorelai evade','Rory duda','Escena cozy','Escena noche',
+    'Puerta abierta','Alguien entra','Luke enfadado','Emily manda indirecta','Desayuno Luke’s','Referencia libro','Momento emocional','Discusión larga','Llamada','Rory perfecta',
+    'Cambio humor','Chiste inteligente','Plano acogedor','Comentario sarcástico','Reconciliación','Confesión','Mirada incómoda','Cena incómoda','Drama ligero','Final reflexivo'
+  ],
+
+  supernatural: [
+    'Dean Impala','Sam portátil','Dean chiste','Demonio','Ojos negros','Exorcismo','Sal puertas','Ritual velas','Castiel aparece','Castiel serio',
+    'Ángel vs demonio','Flashback','Dean bebe','Sam preocupado','Libro antiguo','Fantasma','Vampiro','Arma inútil','Hermandad drama','Sacrificio',
+    'Apocalipsis','Infierno','Cielo','Dean grita','Sam grita','Monstruo semana','Símbolo raro','Motel','Llamada urgente','Dean salva',
+    'Sam herido','Dean herido','Pacto demonio','Ángel interviene','Objeto maldito','Investigación','Cadáver','Sangre','Ritual falla','Escena nocturna',
+    'Discusión hermanos','Momento emocional','Mirada intensa','Viaje coche','Música rock','Final abierto','Criatura rara','Puerta cerrada','Susto leve','Tensión'
+  ],
+
+  saw: [
+    'Trampa','Cuenta atrás','Sangre','Cadena','Llave','Jigsaw vídeo','Muñeco','Mensaje grabado','Decisión imposible','Grito',
+    'Flashback','Giro final','Plano sucio','Oscuridad','Dolor','Trampa injusta','Fallo','Explicación','Música tensa','Puerta cerrada',
+    'Candado','Tiempo acaba','Atrapado','Jigsaw habla','Cámara lenta','Metal oxidado','Habitación sucia','Corte rápido','Cara dolor','Sangre en suelo',
+    'Objeto peligroso','Elección moral','Tensión','Grito largo','Plano cerrado','Movimiento lento','Desesperación','Silencio','Revelación','Final twist'
+  ],
+
+  glee: [
+    'Canción','Coreografía','Solo','Canción famosa','Drama','Profesor habla','Ensayo','Competición','Sueño musical','Vestuario loco',
+    'Llanto','Triángulo','Miradas','Discurso','Conflicto','Reconciliación','Número musical','Baile pasillo','Instituto','Canción triste',
+    'Canción alegre','Aplausos','Rivalidad','Sarcasmo','Cambio pareja','Drama club','Coro','Micrófono','Final emotivo','Brillo',
+    'Escena grupo','Competición rival','Actuación','Nervios','Preparación','Vestuario brillante','Drama amor','Comentario','Abrazo','Final feliz'
+  ],
+
+  greys: [
+    'Cirugía','Quirófano','Doctor corre','Paciente crítico','Llanto','Voz en off','Drama amor','Beso','Discusión','Emergencia',
+    'Código azul','Muerte','Milagro','Relación complicada','Grito médico','Momento triste','Lluvia','Hospital lleno','Confesión','Monitor pita',
+    'Camilla','Diagnóstico','Familiar llora','Puertas','Llamada','Doctor cansado','Operación difícil','Abrazo','Malas noticias','Reflexión',
+    'Sangre','Urgencias','Tensión','Paciente mejora','Paciente empeora','Decisión difícil','Equipo médico','Turno largo','Café hospital','Final emocional'
+  ],
+
+  from: [
+    'Bosque misterioso','Criatura noche','Puerta cerrada','Símbolos','No pueden salir','Nadie entiende','Desaparición','Luces raras','Casa aislada','Discusión',
+    'Miedo constante','Noche peligrosa','Golpes puerta','Susurros','Ventanas tapadas','Mirar ventana error','Sonrisa creepy','Regla nueva','Talismán','Talismán protege',
+    'Rompen regla','Trauma','Teoría loca','Intento escapar','Carretera bucle','Nuevo llega','Flashback','Investigar ruido','Mala decisión','Grupo discute',
+    'Silencio','Plano bosque','Desaparición','Pánico','Sin dormir','Objeto raro','Mensaje extraño','Puerta casi abierta','Grito noche','Mirada sospechosa'
+  ],
+
+  simpsons: [
+    'D’oh','Donuts','Travesura','Lisa razón','Marge grita','Gag','Chiste','Referencia','Absurdo','Springfield caos',
+    'Secundario','Tontería','Castigo','Moral','Ridículo','Burns','Krusty','Moe','Maggie','Final loco',
+    'Plano raro','Chiste visual','Escena rápida','Comentario','Ironía','Accidente','Broma','Sarcasmo','Exageración','Parodia',
+    'Referencia famosa','Momento loco','Personaje grita','Confusión','Humor absurdo','Cambio rápido','Reacción exagerada','Escena corta','Chiste recurrente','Final gracioso'
+  ],
+
+  tentaciones: [
+    'Hoguera','Tablet vídeo','Me has fallado','No te reconozco','Lágrimas','Gritos','Discusión','Celos directo','Tentador','Infidelidad',
+    'Reacción exagerada','Silencio incómodo','Miradas','Comparación','Abandono','Reencuentro','Confesión','Shock','Se levanta','Drama máximo',
+    'Frase meme','Hoguera final','Vídeo duro','Niega todo','Celos fiesta','Beso villa','Llanto confesionario','Montaje','Música intensa','Promesa rota',
+    'Tentación clara','Discusión fuerte','Mirada celosa','Comparación pareja','Drama grupal','Conflicto','Grito final','Reacción viral','Momento incómodo','Final dramático'
+  ],
+
+  conquistador: [
+    'Prueba barro','Caída agua','Equilibrio','Salto','Equipo grita','Capitán decide','Estrategia','Rendición','Esfuerzo','Competición',
+    'Rivalidad','Último segundo','Victoria','Fracaso','Lesión','Motivación','Supervivencia','Prueba brutal','Carrera','Desafío',
+    'Celebración','Fuerza','Resistencia','Cuerda','Barro total','Caída','Orden capitán','Discusión','Remontada','Agotamiento',
+    'Prueba difícil','Error','Tensión','Equipo unido','Grito','Final prueba','Sudor','Dificultad','Superación','Resultado final'
+  ],
+
+  toohot: [
+    'Lana habla','Pierden dinero','Rompen regla','Beso','Celos','Confesión','Drama','Discusión','Reconciliación','Atracción',
+    'Nuevo concursante','Miradas','Coqueteo','Castigo','Dinero baja','No puedo evitarlo','Promesa rota','Tensión','Reacción','Regla absurda',
+    'Premio riesgo','Momento incómodo','Lana juzga','Beso prohibido','Cama','Fiesta','Celos','Tentación','Hablan premio','Drama dinero',
+    'Conflicto','Comparación','Enfado','Relación','Atracción fuerte','Mirada intensa','Escena sexy','Comentario','Final drama','Decisión final'
+  ]
+};
+
+    const MODE_META = {
+      scream: { badge: 'Modo slasher activado', title: 'Scream 3 Bingo 🔪', desc: 'Una sola carta por pantalla. Abre, marca y sobrevive al meta-slasher.', emoji: '🔪', overlay: 'Ghostface te ha concedido un bingo.' },
+      gilmore: { badge: 'Modo Gilmore activado', title: 'Gilmore Girls Bingo ☕', desc: 'Café, sarcasmo y traumas familiares elegantes. Muy Stars Hollow.', emoji: '☕', overlay: 'Bingo con aroma a café y comentario sarcástico.' },
+      supernatural: { badge: 'Modo cazadores activado', title: 'Supernatural Bingo 👻', desc: 'Monstruos, latín, sal y hermanos con trauma premium.', emoji: '👻', overlay: 'Bingo bendecido por el Impala.' },
+      saw: { badge: 'Modo trampa activado', title: 'Saw Bingo 🩸', desc: 'Metal, sangre y decisiones horribles con temporizador.', emoji: '🩸', overlay: 'Has sobrevivido a la línea. Más o menos.' },
+      glee: { badge: 'Modo coro activado', title: 'Glee Bingo 🎤', desc: 'Drama adolescente, canciones y brillo sin freno.', emoji: '🎤', overlay: 'Bingo con final de número musical.' },
+      greys: { badge: 'Modo hospital activado', title: 'Anatomía de Grey Bingo 🏥', desc: 'Quirófanos, amores imposibles y monólogos con lluvia emocional.', emoji: '🏥', overlay: 'Bingo diagnosticado con drama agudo.' },
+      from: { badge: 'Modo bosque activado', title: 'From Bingo 🌲', desc: 'Misterio, criaturas y gente que no entiende nada.', emoji: '🌲', overlay: 'Bingo encontrado en medio del bosque raro.' },
+      simpsons: { badge: 'Modo Springfield activado', title: 'Los Simpson Bingo 🍩', desc: 'Caos amarillo, chistes rápidos y Homer siendo Homer.', emoji: '🍩', overlay: 'Bingo con sabor a donut.' },
+      tentaciones: { badge: 'Modo reality activado', title: 'La Isla de las Tentaciones Bingo 🔥', desc: 'Hogueras, tabletazos emocionales y frases para el museo del meme.', emoji: '🔥', overlay: 'Bingo servido con celos en directo.' },
+      conquistador: { badge: 'Modo supervivencia activado', title: 'El Conquistador Bingo 🪓', desc: 'Barro, agua, capitán y sufrimiento deportivo con gritos de equipo.', emoji: '🪓', overlay: 'Bingo conquistado a puro barro.' },
+      toohot: { badge: 'Modo villa activado', title: 'Too Hot To Handle Bingo 💋', desc: 'Lana, reglas rotas y premio que se evapora con cada beso.', emoji: '💋', overlay: 'Bingo con multa económica de Lana.' }
+    };
+
+    let currentMode = 'gilmore';
+    let currentBoard = [];
+    let cells = [];
+    let overlayShownForCurrentWin = false;
+
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function makeBoard() {
+      const prompts = PROMPTS_BY_MODE[currentMode];
+      if (!prompts || prompts.length < 24) {
+        console.error('Modo sin suficientes frases:', currentMode, prompts?.length);
+        const fallback = Array.from({ length: 24 }, (_, i) => `Casilla ${i + 1}`);
+        return [...fallback.slice(0, 12), 'FREE ✨', ...fallback.slice(12)];
+      }
+      const items = shuffle(prompts).slice(0, 24);
+      return [...items.slice(0, 12), 'FREE ✨', ...items.slice(12)];
+    }
+
+    function updateModeUI() {
+      const meta = MODE_META[currentMode] || MODE_META.gilmore;
+      document.body.setAttribute('data-mode', currentMode);
+      document.getElementById('modeBadge').textContent = meta.badge;
+      document.getElementById('mainTitle').textContent = meta.title;
+      document.getElementById('mainDescription').textContent = meta.desc;
+      document.getElementById('modeSelect').value = currentMode;
+      document.getElementById('overlayEmoji').textContent = meta.emoji;
+      document.getElementById('overlayText').textContent = meta.overlay;
+    }
+
+    function copyBoard(board) {
+      const rows = [];
+      for (let i = 0; i < 25; i += 5) rows.push(board.slice(i, i + 5).join(' | '));
+      const text = `${MODE_META[currentMode].title}\n\n${rows.join('\n')}`;
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Cartón copiado al portapapeles.'))
+        .catch(() => alert('No se pudo copiar.'));
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Enlace copiado.'))
+        .catch(() => alert('No pude copiar el enlace.'));
+    }
+
+    function createCell(text, isFree) {
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'cell' + (isFree ? ' marked free' : '');
+      cell.textContent = text;
+      cell.setAttribute('aria-pressed', isFree ? 'true' : 'false');
+      cell.addEventListener('click', () => {
+        if (isFree) return;
+        cell.classList.toggle('marked');
+        cell.setAttribute('aria-pressed', cell.classList.contains('marked') ? 'true' : 'false');
+        overlayShownForCurrentWin = false;
+        checkBingo();
+      });
+      return cell;
+    }
+
+    function renderBoard() {
+      if (!PROMPTS_BY_MODE[currentMode]) currentMode = 'gilmore';
+      updateModeUI();
+      currentBoard = makeBoard();
+      cells = [];
+      overlayShownForCurrentWin = false;
+
+      const boardWrap = document.getElementById('board');
+      boardWrap.innerHTML = '';
+
+      const head = document.createElement('div');
+      head.className = 'board-head';
+      head.innerHTML = `
+        <div>
+          <h2>Tu cartón</h2>
+          <p>Una sola carta por carga. Cambia de universo cuando quieras y genera otra distinta al instante.</p>
+        </div>
+        <div class="mini-actions">
+          <button class="mini-btn" id="copyBoardBtn" type="button">📋 Copiar cartón</button>
+          <button class="mini-btn" id="resetBtn" type="button">♻️ Reset</button>
+        </div>
+      `;
+
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+
+      currentBoard.forEach((item, i) => {
+        const cell = createCell(item, i === 12);
+        cells.push(cell);
+        grid.appendChild(cell);
+      });
+
+      const tip = document.createElement('div');
+      tip.className = 'tip';
+      tip.textContent = 'Cada vez que abras o recargues la página saldrá un cartón nuevo.';
+
+      boardWrap.appendChild(head);
+      boardWrap.appendChild(grid);
+      boardWrap.appendChild(tip);
+
+      document.getElementById('copyBoardBtn').addEventListener('click', () => copyBoard(currentBoard));
+      document.getElementById('resetBtn').addEventListener('click', resetBoardMarks);
+    }
+
+    function resetBoardMarks() {
+      cells.forEach((cell, index) => {
+        if (index === 12) {
+          cell.className = 'cell marked free';
+          cell.setAttribute('aria-pressed', 'true');
+        } else {
+          cell.className = 'cell';
+          cell.setAttribute('aria-pressed', 'false');
+        }
+      });
+      overlayShownForCurrentWin = false;
+    }
+
+    function getMarkedState() {
+      return cells.map(cell => cell.classList.contains('marked'));
+    }
+
+    function hasWinningLine(marked) {
+      const wins = [
+        [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14], [15,16,17,18,19], [20,21,22,23,24],
+        [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22], [3,8,13,18,23], [4,9,14,19,24],
+        [0,6,12,18,24], [4,8,12,16,20]
+      ];
+      return wins.some(line => line.every(index => marked[index]));
+    }
+
+    function showOverlay() {
+      const overlay = document.getElementById('bingoOverlay');
+      document.getElementById('overlayTitle').textContent = '¡Bingo!';
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeOverlay() {
+      const overlay = document.getElementById('bingoOverlay');
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function playSoundByMode() {
+      const AudioContextRef = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextRef) return;
+      const ctx = new AudioContextRef();
+      const now = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.18, now + 0.03);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+      master.connect(ctx.destination);
+
+      function tone(freq, start, duration, type = 'sine') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(start);
+        osc.stop(start + duration + 0.01);
+      }
+
+      if (currentMode === 'scream') {
+        tone(900, now, 0.18, 'sine');
+        tone(1300, now + 0.35, 0.18, 'triangle');
+      } else if (currentMode === 'greys') {
+        tone(1000, now, 0.08, 'square');
+        tone(1000, now + 0.28, 0.08, 'square');
+        tone(1000, now + 0.56, 0.08, 'square');
+      } else if (currentMode === 'toohot') {
+        tone(600, now, 0.14, 'triangle');
+        tone(820, now + 0.18, 0.14, 'triangle');
+        tone(1040, now + 0.36, 0.14, 'triangle');
+      } else {
+        tone(720, now, 0.16, 'sine');
+      }
+
+      setTimeout(() => { try { ctx.close(); } catch {} }, 1700);
+    }
+
+    function checkBingo() {
+      const marked = getMarkedState();
+      if (hasWinningLine(marked) && !overlayShownForCurrentWin) {
+        overlayShownForCurrentWin = true;
+        playSoundByMode();
+        showOverlay();
+      }
+    }
+
+    document.getElementById('regenBtn').addEventListener('click', renderBoard);
+    document.getElementById('copyLinkBtn').addEventListener('click', copyLink);
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    document.getElementById('modeSelect').addEventListener('change', (e) => {
+      currentMode = e.target.value;
+      renderBoard();
+    });
+    document.getElementById('closeOverlayBtn').addEventListener('click', closeOverlay);
+    document.getElementById('bingoOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'bingoOverlay') closeOverlay();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeOverlay();
+    });
+
+    renderBoard();
+  </script>
+</body>
+</html>
